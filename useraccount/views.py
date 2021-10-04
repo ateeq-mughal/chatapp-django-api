@@ -1,19 +1,11 @@
-# from django.shortcuts import render
-# from rest_framework.views import APIView
-
+from allauth.account.models import EmailAddress
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
 # # Create your views here.
 
-
-# class AllUserView(models.Model):
-
-#     def get(self, request):
-        
-#         query_set = User.objects.all()
-#         print("HELLLOOO", query_set)
-
-#         serializer = UserSerializer(query_set)
-#         print("DEKHOOOOOOOOOOO", serializer.data)
-
-
-#         return Response(serializer.data)
+@api_view(('GET',))
+def all_user(request):
+    
+    users = EmailAddress.objects.all().values()
+    return Response(users)
