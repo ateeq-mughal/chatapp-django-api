@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework.response import Response
 from django.shortcuts import HttpResponse
 from rest_framework.decorators import api_view
+from django.http import Http404
 from django.core import serializers
 from .models import Message
 from rest_framework.views import APIView
@@ -25,8 +26,16 @@ ref = db.reference('messeges')
 @api_view(('GET',))
 def all_user(request):
     
-    users = User.objects.all().values()    
-    return Response(users)
+    if request.user.is_authenticated:
+        users = User.objects.all().values()    
+        return Response(users)
+    
+    else:
+        response = {
+        "status" : "Unauthenticated"
+        }
+        return Response(response)
+
 
 
 @api_view(('GET',))
@@ -42,6 +51,11 @@ def specific_user(request, pk):
 class SendMessage(APIView):
     def post(self, request):
         if request.user.is_authenticated:
+            try:
+                user = User.objects.get(id=request.data["recieverId"])
+                print(user)
+            except:
+                raise Http404("Reciever does not exist")
 
             msg = Message(
                 message = request.data["message"],
@@ -52,7 +66,7 @@ class SendMessage(APIView):
                 time = request.data["time"])
             msg.save()
 
-            message = ref.push({
+            ref.push({
             "message" :  request.data["message"],
             "recieverId": request.data["recieverId"],
             "room": request.data["room"],
@@ -63,6 +77,9 @@ class SendMessage(APIView):
             
 
             return Response(request.data)
-
-        return HttpResponse("unauthenticated!!!")
-
+        
+        else:
+            response = {
+        "status" : "Unauthenticated"
+        }
+        return Response(response)
